@@ -368,7 +368,7 @@
 <script>
   // ── CONFIG ──────────────────────────────────────────────
   // After deploying Apps Script, paste your Web App URL here:
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec";
+  const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
   // ────────────────────────────────────────────────────────
 
   const CATEGORY_MAP = {
@@ -408,7 +408,7 @@
       const opt = document.createElement("option");
       opt.value = label;
       opt.textContent = label;
-      if (i === -1) opt.selected = true; // default to last month
+      if (i === 0) opt.selected = true; // default to current month
       sel.appendChild(opt);
     }
   }
