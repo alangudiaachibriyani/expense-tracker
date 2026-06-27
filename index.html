@@ -368,7 +368,7 @@
 <script>
   // ── CONFIG ──────────────────────────────────────────────
   // After deploying Apps Script, paste your Web App URL here:
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec";
+  const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
   // ────────────────────────────────────────────────────────
 
   const CATEGORY_MAP = {
@@ -553,9 +553,11 @@
     try {
       const res = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
+        redirect: "follow",
         body: JSON.stringify({ expenses: rows })
       });
-      const data = await res.json();
+      const text = await res.text();
+      const data = JSON.parse(text);
       if (data.success) {
         showToast("✅ " + data.message);
         resetForm();
