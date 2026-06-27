@@ -374,7 +374,7 @@
     const btn    = document.getElementById("fetch-btn");
     const results = document.getElementById("results");
 
-    if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec") {
+    if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
       results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">⚙️</div><p>Apps Script URL not set</p><small>Paste your Web App URL in the APPS_SCRIPT_URL variable</small></div></div>`;
       return;
     }
@@ -382,24 +382,44 @@
     btn.disabled = true; btn.textContent = "Loading...";
     results.innerHTML = `<div class="table-card"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
 
-    try {
-      const url = APPS_SCRIPT_URL + "?action=read&month=" + encodeURIComponent(month) + "&person=" + encodeURIComponent(person);
-      const res  = await fetch(url, { redirect: "follow", mode: "cors" });
-      const text = await res.text();
-      const data = JSON.parse(text);
+    // Use JSONP to bypass CORS — Apps Script supports this natively
+    const cbName = "aab_cb_" + Date.now();
+    const url = APPS_SCRIPT_URL
+      + "?action=read"
+      + "&month="   + encodeURIComponent(month)
+      + "&person="  + encodeURIComponent(person)
+      + "&callback=" + cbName;
 
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>Request timed out. Please try again.</p></div></div>`;
+      btn.disabled = false; btn.textContent = "View Report";
+    }, 15000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.getElementById("fetch-btn").disabled = false;
+      document.getElementById("fetch-btn").textContent = "View Report";
       if (!data.success) {
         results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>${data.message}</p></div></div>`;
         return;
       }
-
       renderReport(data.rows, month, person);
+    };
 
-    } catch (err) {
-      results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>Network error. Please try again.</p><small>${err.message}</small></div></div>`;
-    }
+    const script = document.createElement("script");
+    script.src = url;
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>Failed to connect. Check your Apps Script URL.</p></div></div>`;
+      btn.disabled = false; btn.textContent = "View Report";
+    };
+    document.head.appendChild(script);
 
-    btn.disabled = false; btn.textContent = "View Report";
+    // Return early — result handled by JSONP callback above
+    return;
   }
 
   function renderReport(rows, month, person) {
