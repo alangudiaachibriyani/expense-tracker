@@ -374,7 +374,7 @@
     const btn    = document.getElementById("fetch-btn");
     const results = document.getElementById("results");
 
-    if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec") {
+    if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
       results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">⚙️</div><p>Apps Script URL not set</p><small>Paste your Web App URL in the APPS_SCRIPT_URL variable</small></div></div>`;
       return;
     }
@@ -384,8 +384,9 @@
 
     try {
       const url = APPS_SCRIPT_URL + "?action=read&month=" + encodeURIComponent(month) + "&person=" + encodeURIComponent(person);
-      const res  = await fetch(url);
-      const data = await res.json();
+      const res  = await fetch(url, { redirect: "follow", mode: "cors" });
+      const text = await res.text();
+      const data = JSON.parse(text);
 
       if (!data.success) {
         results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>${data.message}</p></div></div>`;
