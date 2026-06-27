@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAB Expense Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green:       #1a6b3a;
+      --green-dark:  #134d2a;
+      --green-light: #e8f5ee;
+      --gold:        #c8972a;
+      --gold-light:  #fdf6e3;
+      --red:         #c0392b;
+      --red-light:   #fdf0ee;
+      --bg:          #f5f7f5;
+      --white:       #ffffff;
+      --border:      #d0dbd3;
+      --text:        #1a2e1e;
+      --muted:       #6b7f6f;
+      --radius:      10px;
+      --shadow:      0 2px 12px rgba(26,107,58,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    header img {
+      width: 44px; height: 44px;
+      border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--gold);
+    }
+    .title-block h1 { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .title-block p  { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+    .btn-entry {
+      background: var(--gold);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-entry:hover { background: #b8861f; }
+
+    /* ── Container ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ── Filter card ── */
+    .filter-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .filter-card-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--green); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 16px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--green-light);
+    }
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+    @media (max-width: 560px) {
+      .filter-row { grid-template-columns: 1fr 1fr; }
+      .filter-row .btn-fetch { grid-column: 1 / -1; }
+    }
+
+    label {
+      display: block;
+      font-size: 12px; font-weight: 600;
+      color: var(--muted); margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    select, input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: #fff;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7f6f' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      transition: border-color 0.2s;
+    }
+    select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,107,58,0.1); }
+
+    .btn-fetch {
+      background: var(--green);
+      color: #fff; border: none;
+      border-radius: 7px; padding: 10px 24px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      white-space: nowrap; transition: background 0.2s;
+    }
+    .btn-fetch:hover { background: var(--green-dark); }
+    .btn-fetch:disabled { background: #9cb8a4; cursor: not-allowed; }
+
+    /* ── Summary cards ── */
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 560px) { .summary-row { grid-template-columns: 1fr 1fr; } }
+
+    .summary-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+    }
+    .summary-card .s-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary-card .s-value { font-size: 22px; font-weight: 700; color: var(--green); margin-top: 4px; }
+    .summary-card.gold .s-value { color: var(--gold); }
+    .summary-card.blue .s-value { color: #2563eb; }
+
+    /* ── Table card ── */
+    .table-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--green-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .table-header h2 { font-size: 14px; font-weight: 600; color: var(--green); }
+
+    .btn-export {
+      background: var(--green-light);
+      border: 1.5px solid var(--green);
+      color: var(--green);
+      border-radius: 6px; padding: 6px 14px;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-export:hover { background: #d4eddd; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: var(--green);
+      color: #fff;
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #eef2ee; transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--green-light); }
+    tbody td { padding: 11px 14px; color: var(--text); }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-food     { background: #e8f5ee; color: #1a6b3a; }
+    .badge-labour   { background: #e8f0fd; color: #2563eb; }
+    .badge-op       { background: #fdf6e3; color: #c8972a; }
+    .badge-marketing{ background: #fdf0ee; color: #c0392b; }
+    .badge-asset    { background: #f3e8fd; color: #7c3aed; }
+    .badge-others   { background: #f3f4f6; color: #6b7280; }
+
+    .amount-cell { font-weight: 600; color: var(--text); text-align: right; }
+
+    /* ── Footer total row ── */
+    tfoot td {
+      padding: 12px 14px;
+      font-weight: 700;
+      background: var(--gold-light);
+      border-top: 2px solid #e8d5a0;
+      font-size: 13px;
+    }
+    tfoot .total-label { color: var(--muted); }
+    tfoot .total-amount { color: var(--gold); text-align: right; font-size: 15px; }
+
+    /* ── States ── */
+    .state-box {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .state-box .state-icon { font-size: 40px; margin-bottom: 12px; }
+    .state-box p { font-size: 15px; font-weight: 500; }
+    .state-box small { font-size: 12px; margin-top: 6px; display: block; }
+
+    /* ── Spinner ── */
+    .spinner-wrap { padding: 60px; text-align: center; }
+    .spinner {
+      display: inline-block;
+      width: 32px; height: 32px;
+      border: 3px solid var(--green-light);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Person summary ── */
+    .person-breakdown {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .person-breakdown-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--green-light);
+      font-size: 13px; font-weight: 600; color: var(--green);
+    }
+    .person-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0;
+    }
+    .person-item {
+      padding: 14px 20px;
+      border-right: 1px solid var(--green-light);
+      border-bottom: 1px solid var(--green-light);
+    }
+    .person-item:last-child { border-right: none; }
+    .person-name { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .person-amount { font-size: 16px; font-weight: 700; color: var(--green); margin-top: 3px; }
+    .person-count { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="https://raw.githubusercontent.com/alangudiaachibriyani/HR/main/logo.png" alt="AAB Logo" onerror="this.style.display='none'"/>
+    <div class="title-block">
+      <h1>Alangudi Aachi Biriyani</h1>
+      <p>Expense Report</p>
+    </div>
+  </div>
+  <a href="index.html" class="btn-entry">+ Add Expense</a>
+</header>
+
+<div class="container">
+
+  <!-- Filters -->
+  <div class="filter-card">
+    <div class="filter-card-title">Filter Expenses</div>
+    <div class="filter-row">
+      <div>
+        <label for="f-month">Expense Month</label>
+        <select id="f-month">
+          <option value="All">All Months</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-person">Spend By</label>
+        <select id="f-person">
+          <option value="All">All Members</option>
+          <option>Velu</option>
+          <option>Mani Sakthi</option>
+          <option>Shanmugam</option>
+          <option>Perumal</option>
+          <option>Yogeshwaran</option>
+          <option>Mani Selvaraj</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn-fetch" id="fetch-btn" onclick="loadData()">View Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results area -->
+  <div id="results"></div>
+
+</div>
+
+<script>
+  // ── CONFIG ─────────────────────────────────────────────
+  // Use the SAME Apps Script URL as your expense entry form
+  const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+  // ───────────────────────────────────────────────────────
+
+  const CATEGORY_BADGE = {
+    "Food Cost":           "badge-food",
+    "Labour Cost":         "badge-labour",
+    "Labour cost":         "badge-labour",
+    "Operation Cost":      "badge-op",
+    "Marketing & Branding":"badge-marketing",
+    "Asset":               "badge-asset",
+    "Others":              "badge-others"
+  };
+
+  // Populate month filter (last 12 months)
+  function populateMonths() {
+    const sel = document.getElementById("f-month");
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const now = new Date();
+    for (let i = 0; i <= 11; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = months[d.getMonth()] + "-" + String(d.getFullYear()).slice(2);
+      const opt = document.createElement("option");
+      opt.value = label; opt.textContent = label;
+      if (i === 1) opt.selected = true; // default last month
+      sel.appendChild(opt);
+    }
+  }
+
+  function fmt(n) {
+    return "₹ " + Number(n).toLocaleString("en-IN");
+  }
+
+  async function loadData() {
+    const month  = document.getElementById("f-month").value;
+    const person = document.getElementById("f-person").value;
+    const btn    = document.getElementById("fetch-btn");
+    const results = document.getElementById("results");
+
+    if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec") {
+      results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">⚙️</div><p>Apps Script URL not set</p><small>Paste your Web App URL in the APPS_SCRIPT_URL variable</small></div></div>`;
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = "Loading...";
+    results.innerHTML = `<div class="table-card"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
+
+    try {
+      const url = APPS_SCRIPT_URL + "?action=read&month=" + encodeURIComponent(month) + "&person=" + encodeURIComponent(person);
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      if (!data.success) {
+        results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>${data.message}</p></div></div>`;
+        return;
+      }
+
+      renderReport(data.rows, month, person);
+
+    } catch (err) {
+      results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>Network error. Please try again.</p><small>${err.message}</small></div></div>`;
+    }
+
+    btn.disabled = false; btn.textContent = "View Report";
+  }
+
+  function renderReport(rows, month, person) {
+    const results = document.getElementById("results");
+
+    if (!rows || rows.length === 0) {
+      results.innerHTML = `
+        <div class="table-card">
+          <div class="state-box">
+            <div class="state-icon">📭</div>
+            <p>No expenses found</p>
+            <small>No entries for ${person === "All" ? "any member" : person} in ${month === "All" ? "any month" : month}</small>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const total   = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const catMap  = {};
+    const perMap  = {};
+
+    rows.forEach(r => {
+      catMap[r.expenseCategory] = (catMap[r.expenseCategory] || 0) + Number(r.amount || 0);
+      if (!perMap[r.spendBy]) perMap[r.spendBy] = { total: 0, count: 0 };
+      perMap[r.spendBy].total += Number(r.amount || 0);
+      perMap[r.spendBy].count++;
+    });
+
+    // Summary cards
+    const topCat = Object.entries(catMap).sort((a,b) => b[1]-a[1])[0];
+
+    let html = `
+      <div class="summary-row">
+        <div class="summary-card">
+          <div class="s-label">Total Expenses</div>
+          <div class="s-value">${fmt(total)}</div>
+        </div>
+        <div class="summary-card blue">
+          <div class="s-label">No. of Entries</div>
+          <div class="s-value">${rows.length}</div>
+        </div>
+        <div class="summary-card gold">
+          <div class="s-label">Top Category</div>
+          <div class="s-value" style="font-size:15px">${topCat ? topCat[0] : "-"}</div>
+        </div>
+      </div>`;
+
+    // Person breakdown (only in "All" mode)
+    if (person === "All" && Object.keys(perMap).length > 1) {
+      html += `
+        <div class="person-breakdown">
+          <div class="person-breakdown-header">Spend By — Member Breakdown</div>
+          <div class="person-grid">
+            ${Object.entries(perMap).sort((a,b) => b[1].total - a[1].total).map(([name, d]) => `
+              <div class="person-item">
+                <div class="person-name">${name}</div>
+                <div class="person-amount">${fmt(d.total)}</div>
+                <div class="person-count">${d.count} entr${d.count === 1 ? "y" : "ies"}</div>
+              </div>`).join("")}
+          </div>
+        </div>`;
+    }
+
+    // Table
+    html += `
+      <div class="table-card">
+        <div class="table-header">
+          <h2>${rows.length} expense${rows.length !== 1 ? "s" : ""} — ${person === "All" ? "All Members" : person} &nbsp;|&nbsp; ${month === "All" ? "All Months" : month}</h2>
+          <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="report-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Spend By</th>
+                <th>Month</th>
+                <th style="text-align:right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((r, i) => {
+                const badge = CATEGORY_BADGE[r.expenseCategory] || "badge-others";
+                return `
+                  <tr>
+                    <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+                    <td style="white-space:nowrap">${r.date || ""}</td>
+                    <td>${r.description || "<span style='color:var(--muted);font-style:italic'>—</span>"}</td>
+                    <td><span class="badge ${badge}">${r.expenseCategory || ""}</span></td>
+                    <td>${r.expenseType || ""}</td>
+                    <td>${r.spendBy || ""}</td>
+                    <td>${r.expenseMonth || ""}</td>
+                    <td class="amount-cell">${fmt(r.amount)}</td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="7" class="total-label">Total (${rows.length} entries)</td>
+                <td class="total-amount">${fmt(total)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>`;
+
+    results.innerHTML = html;
+    // Store for CSV export
+    window._reportRows = rows;
+  }
+
+  function exportCSV() {
+    const rows = window._reportRows || [];
+    if (!rows.length) return;
+    const headers = ["Date","Description","Expense Category","Expense Type","Amount","Spend By","Expense Month"];
+    const lines = [headers.join(",")];
+    rows.forEach(r => {
+      lines.push([
+        r.date, `"${(r.description||"").replace(/"/g,'""')}"`,
+        r.expenseCategory, r.expenseType,
+        r.amount, r.spendBy, r.expenseMonth
+      ].join(","));
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "AAB_Expenses.csv";
+    a.click();
+  }
+
+  populateMonths();
+</script>
+</body>
+</html>
