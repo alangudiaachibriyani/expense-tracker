@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AAB Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green:    #1a6b3a;
+      --green-dark: #134d2a;
+      --green-light: #e8f5ee;
+      --gold:     #c8972a;
+      --gold-light: #fdf6e3;
+      --red:      #c0392b;
+      --red-light:#fdf0ee;
+      --bg:       #f5f7f5;
+      --white:    #ffffff;
+      --border:   #d0dbd3;
+      --text:     #1a2e1e;
+      --muted:    #6b7f6f;
+      --radius:   10px;
+      --shadow:   0 2px 12px rgba(26,107,58,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    header img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--gold);
+    }
+    header .title-block h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+    header .title-block p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 2px;
+    }
+
+    /* ── Container ── */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    /* ── Section card ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--green-light);
+    }
+
+    /* ── Global fields (shared across all rows) ── */
+    .global-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 600px) {
+      .global-fields { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 400px) {
+      .global-fields { grid-template-columns: 1fr; }
+    }
+
+    /* ── Form fields ── */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,107,58,0.1);
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7f6f' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    select:disabled {
+      background-color: #f0f4f1;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
+    /* ── Expense rows ── */
+    .expense-rows-section { margin-top: 0; }
+
+    .expense-row {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      position: relative;
+      box-shadow: 0 1px 4px rgba(26,107,58,0.05);
+    }
+    .expense-row:first-child { border-color: var(--green); }
+
+    .row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .row-number {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .btn-remove {
+      background: var(--red-light);
+      border: 1px solid #e8c5c0;
+      color: var(--red);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-remove:hover { background: #f5d5d0; }
+
+    .row-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .row-fields .full { grid-column: 1 / -1; }
+
+    @media (max-width: 500px) {
+      .row-fields { grid-template-columns: 1fr; }
+      .row-fields .full { grid-column: 1; }
+    }
+
+    /* ── Amount field ── */
+    .amount-wrap { position: relative; }
+    .amount-wrap span {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .amount-wrap input { padding-left: 26px; }
+
+    /* ── Add row button ── */
+    .btn-add-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-light);
+      border: 1.5px dashed var(--green);
+      color: var(--green);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .btn-add-row:hover { background: #d4eddd; }
+    .btn-add-row svg { width: 18px; height: 18px; }
+
+    /* ── Total bar ── */
+    .total-bar {
+      background: var(--gold-light);
+      border: 1.5px solid #e8d5a0;
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .total-bar span { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .total-bar strong { font-size: 20px; font-weight: 700; color: var(--gold); }
+
+    /* ── Submit ── */
+    .btn-submit {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, transform 0.1s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-submit:hover { background: var(--green-dark); }
+    .btn-submit:active { transform: scale(0.99); }
+    .btn-submit:disabled { background: #9cb8a4; cursor: not-allowed; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green-dark);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+      z-index: 999;
+      text-align: center;
+      min-width: 240px;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--red); }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://raw.githubusercontent.com/alangudiaachibriyani/HR/main/logo.png" alt="AAB Logo" onerror="this.style.display='none'"/>
+  <div class="title-block">
+    <h1>Alangudi Aachi Biriyani</h1>
+    <p>Expense Entry Form</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Global Fields -->
+  <div class="card">
+    <div class="card-title">Common Details</div>
+    <div class="global-fields">
+      <div>
+        <label for="g-date">Date *</label>
+        <input type="date" id="g-date" required/>
+      </div>
+      <div>
+        <label for="g-month">Expense Month *</label>
+        <select id="g-month" required>
+          <option value="">Select Month</option>
+        </select>
+      </div>
+      <div>
+        <label for="g-spendby">Spend By *</label>
+        <select id="g-spendby" required>
+          <option value="">Select Person</option>
+          <option>Velu</option>
+          <option>Mani Sakthi</option>
+          <option>Shanmugam</option>
+          <option>Perumal</option>
+          <option>Yogeshwaran</option>
+          <option>Mani Selvaraj</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense Rows -->
+  <div class="card">
+    <div class="card-title">Expense Details</div>
+    <div id="expense-rows"></div>
+    <button class="btn-add-row" onclick="addRow()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Another Expense
+    </button>
+  </div>
+
+  <!-- Total -->
+  <div class="total-bar">
+    <span>Total Amount</span>
+    <strong id="total-display">₹ 0</strong>
+  </div>
+
+  <!-- Submit -->
+  <button class="btn-submit" id="submit-btn" onclick="submitExpenses()">
+    Submit Expenses
+  </button>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────
+  // After deploying Apps Script, paste your Web App URL here:
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec";
+  // ────────────────────────────────────────────────────────
+
+  const CATEGORY_MAP = {
+    "Food Cost": [
+      "Chicken Meat", "Mutton Meat", "Mutton Koluppu",
+      "Groceries", "Grossary shop bill", "Vegetables",
+      "Masala", "Briyani Masala expence", "Cool Drinks"
+    ],
+    "Labour Cost": [
+      "Employee Salary", "Employee Food Allowance",
+      "Employee Extra work Allowance", "Employee Petroal Allowance",
+      "Employee Tea"
+    ],
+    "Operation Cost": [
+      "XL Petrol", "Aduppu Kari/Viragu", "Vazha ilai",
+      "Parcel item", "Transport", "Hygiene",
+      "Gas bill", "Rent", "EB Bill", "Utilities",
+      "Other Expense"
+    ],
+    "Marketing & Branding": [
+      "Marketing", "Branding", "Insta video promotion"
+    ],
+    "Asset": ["Asset"],
+    "Others": ["Others"]
+  };
+
+  let rowCount = 0;
+
+  // ── Generate Expense Month options (past 5 + next 2) ──
+  function populateMonths() {
+    const sel = document.getElementById("g-month");
+    const now = new Date();
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    for (let i = -5; i <= 2; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const label = months[d.getMonth()] + "-" + String(d.getFullYear()).slice(2);
+      const opt = document.createElement("option");
+      opt.value = label;
+      opt.textContent = label;
+      if (i === -1) opt.selected = true; // default to last month
+      sel.appendChild(opt);
+    }
+  }
+
+  // ── Set today's date ──
+  function setToday() {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("g-date").value = today;
+  }
+
+  // ── Add a new expense row ──
+  function addRow() {
+    rowCount++;
+    const id = rowCount;
+    const container = document.getElementById("expense-rows");
+    const div = document.createElement("div");
+    div.className = "expense-row";
+    div.id = "row-" + id;
+    div.innerHTML = `
+      <div class="row-header">
+        <span class="row-number">Expense ${id}</span>
+        ${id > 1 ? `<button class="btn-remove" onclick="removeRow(${id})">✕ Remove</button>` : ""}
+      </div>
+      <div class="row-fields">
+        <div class="full">
+          <label>Description</label>
+          <input type="text" placeholder="e.g. Daily Chicken purchase" id="desc-${id}"/>
+        </div>
+        <div>
+          <label>Expense Category *</label>
+          <select id="cat-${id}" onchange="filterTypes(${id})" required>
+            <option value="">Select Category</option>
+            ${Object.keys(CATEGORY_MAP).map(c => `<option>${c}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Expense Type *</label>
+          <select id="type-${id}" required disabled>
+            <option value="">Select Category first</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Amount (₹) *</label>
+          <div class="amount-wrap">
+            <span>₹</span>
+            <input type="number" id="amt-${id}" placeholder="0" min="0" step="1" oninput="updateTotal()" required/>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+    document.getElementById("desc-" + id).focus();
+  }
+
+  // ── Remove a row ──
+  function removeRow(id) {
+    document.getElementById("row-" + id).remove();
+    updateTotal();
+  }
+
+  // ── Filter types based on category ──
+  function filterTypes(id) {
+    const cat = document.getElementById("cat-" + id).value;
+    const typeSel = document.getElementById("type-" + id);
+    typeSel.innerHTML = `<option value="">Select Type</option>`;
+    if (cat && CATEGORY_MAP[cat]) {
+      CATEGORY_MAP[cat].forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t; opt.textContent = t;
+        typeSel.appendChild(opt);
+      });
+      typeSel.disabled = false;
+    } else {
+      typeSel.disabled = true;
+    }
+  }
+
+  // ── Update total ──
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('[id^="amt-"]').forEach(el => {
+      total += parseFloat(el.value) || 0;
+    });
+    document.getElementById("total-display").textContent =
+      "₹ " + total.toLocaleString("en-IN");
+  }
+
+  // ── Show toast ──
+  function showToast(msg, isError = false) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "show" + (isError ? " error" : "");
+    setTimeout(() => { t.className = ""; }, 4000);
+  }
+
+  // ── Submit ──
+  async function submitExpenses() {
+    const date    = document.getElementById("g-date").value;
+    const month   = document.getElementById("g-month").value;
+    const spendBy = document.getElementById("g-spendby").value;
+
+    if (!date || !month || !spendBy) {
+      showToast("Please fill Date, Expense Month and Spend By.", true);
+      return;
+    }
+
+    const rows = [];
+    let valid = true;
+
+    document.querySelectorAll(".expense-row").forEach(rowEl => {
+      const id = rowEl.id.replace("row-", "");
+      const desc = document.getElementById("desc-" + id).value.trim();
+      const cat  = document.getElementById("cat-" + id).value;
+      const type = document.getElementById("type-" + id).value;
+      const amt  = document.getElementById("amt-" + id).value;
+
+      if (!cat || !type || !amt) { valid = false; return; }
+
+      rows.push({
+        date, expenseMonth: month, spendBy,
+        description: desc,
+        expenseCategory: cat,
+        expenseType: type,
+        amount: parseFloat(amt)
+      });
+    });
+
+    if (!valid || rows.length === 0) {
+      showToast("Please fill all required fields in every expense row.", true);
+      return;
+    }
+
+    if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+      showToast("⚠️ Please set your Apps Script URL in the HTML file.", true);
+      return;
+    }
+
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Saving...`;
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ expenses: rows })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("✅ " + data.message);
+        resetForm();
+      } else {
+        showToast("❌ " + data.message, true);
+      }
+    } catch (err) {
+      showToast("❌ Network error. Please try again.", true);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = "Submit Expenses";
+  }
+
+  // ── Reset form after submit ──
+  function resetForm() {
+    document.getElementById("g-spendby").value = "";
+    setToday();
+    document.getElementById("expense-rows").innerHTML = "";
+    rowCount = 0;
+    addRow();
+    updateTotal();
+  }
+
+  // ── Init ──
+  populateMonths();
+  setToday();
+  addRow();
+</script>
+</body>
+</html>
