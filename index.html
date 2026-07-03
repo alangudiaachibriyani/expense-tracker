@@ -371,29 +371,8 @@
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy321y4TNZK21csVhQSEcCa72fnRrB5-qgCN7l3Ewez0wuQMY49HMTnzOkJ7e_tjCS/exec";
   // ────────────────────────────────────────────────────────
 
-  const CATEGORY_MAP = {
-    "Food Cost": [
-      "Chicken Meat", "Mutton Meat", "Mutton Koluppu",
-      "Groceries", "Grossary shop bill", "Vegetables",
-      "Masala", "Briyani Masala expence", "Cool Drinks"
-    ],
-    "Labour Cost": [
-      "Employee Salary", "Employee Food Allowance",
-      "Employee Extra work Allowance", "Employee Petroal Allowance",
-      "Employee Tea"
-    ],
-    "Operation Cost": [
-      "XL Petrol", "Aduppu Kari/Viragu", "Vazha ilai",
-      "Parcel item", "Transport", "Hygiene",
-      "Gas bill", "Rent", "EB Bill", "Utilities",
-      "Other Expense"
-    ],
-    "Marketing & Branding": [
-      "Marketing", "Branding", "Insta video promotion"
-    ],
-    "Asset": ["Asset"],
-    "Others": ["Others"]
-  };
+  // Categories loaded dynamically from Google Sheet
+  let CATEGORY_MAP = {};
 
   let rowCount = 0;
 
@@ -427,6 +406,10 @@
     const div = document.createElement("div");
     div.className = "expense-row";
     div.id = "row-" + id;
+    const catOptions = Object.keys(CATEGORY_MAP).length
+      ? Object.keys(CATEGORY_MAP).map(c => `<option>${c}</option>`).join("")
+      : `<option disabled>Loading...</option>`;
+
     div.innerHTML = `
       <div class="row-header">
         <span class="row-number">Expense ${id}</span>
@@ -441,7 +424,7 @@
           <label>Expense Category *</label>
           <select id="cat-${id}" onchange="filterTypes(${id})" required>
             <option value="">Select Category</option>
-            ${Object.keys(CATEGORY_MAP).map(c => `<option>${c}</option>`).join("")}
+            ${catOptions}
           </select>
         </div>
         <div>
@@ -582,10 +565,34 @@
     updateTotal();
   }
 
+  // ── Load categories dynamically from sheet ──
+  function loadCategories() {
+    if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") { addRow(); return; }
+
+    const cbName = "cat_cb_" + Date.now();
+    const url = APPS_SCRIPT_URL + "?action=categories&callback=" + cbName;
+
+    window[cbName] = function(data) {
+      delete window[cbName];
+      if (data.success && data.categories) {
+        CATEGORY_MAP = data.categories;
+      }
+      addRow(); // Add first row only after categories are loaded
+    };
+
+    const script = document.createElement("script");
+    script.src = url;
+    script.onerror = function() {
+      delete window[cbName];
+      addRow(); // Still add row even if load fails
+    };
+    document.head.appendChild(script);
+  }
+
   // ── Init ──
   populateMonths();
   setToday();
-  addRow();
+  loadCategories(); // loads categories then adds first row
 </script>
 </body>
 </html>
