@@ -92,11 +92,11 @@
     }
     .filter-row {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr 1fr auto;
       gap: 14px;
       align-items: end;
     }
-    @media (max-width: 560px) {
+    @media (max-width: 700px) {
       .filter-row { grid-template-columns: 1fr 1fr; }
       .filter-row .btn-fetch { grid-column: 1 / -1; }
     }
@@ -323,6 +323,17 @@
         </select>
       </div>
       <div>
+        <label for="f-via">Payment Mode</label>
+        <select id="f-via">
+          <option value="All">All Modes</option>
+          <option>UPI</option>
+          <option>Cash</option>
+          <option>Federal Bank Transfer</option>
+          <option>HDFC Bank Transfer</option>
+          <option>Others</option>
+        </select>
+      </div>
+      <div>
         <button class="btn-fetch" id="fetch-btn" onclick="loadData()">View Report</button>
       </div>
     </div>
@@ -371,6 +382,7 @@
   async function loadData() {
     const month  = document.getElementById("f-month").value;
     const person = document.getElementById("f-person").value;
+    const via    = document.getElementById("f-via").value;
     const btn    = document.getElementById("fetch-btn");
     const results = document.getElementById("results");
 
@@ -388,6 +400,7 @@
       + "?action=read"
       + "&month="   + encodeURIComponent(month)
       + "&person="  + encodeURIComponent(person)
+      + "&via="     + encodeURIComponent(via)
       + "&callback=" + cbName;
 
     const timeout = setTimeout(() => {
@@ -405,7 +418,7 @@
         results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>${data.message}</p></div></div>`;
         return;
       }
-      renderReport(data.rows, month, person);
+      renderReport(data.rows, month, person, via);
     };
 
     const script = document.createElement("script");
@@ -422,7 +435,7 @@
     return;
   }
 
-  function renderReport(rows, month, person) {
+  function renderReport(rows, month, person, via) {
     const results = document.getElementById("results");
 
     if (!rows || rows.length === 0) {
@@ -487,7 +500,7 @@
     html += `
       <div class="table-card">
         <div class="table-header">
-          <h2>${rows.length} expense${rows.length !== 1 ? "s" : ""} — ${person === "All" ? "All Members" : person} &nbsp;|&nbsp; ${month === "All" ? "All Months" : month}</h2>
+          <h2>${rows.length} expense${rows.length !== 1 ? "s" : ""} — ${person === "All" ? "All Members" : person} &nbsp;|&nbsp; ${via === "All" ? "All Modes" : via} &nbsp;|&nbsp; ${month === "All" ? "All Months" : month}</h2>
           <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
         </div>
         <div class="table-wrap">
@@ -500,6 +513,7 @@
                 <th>Category</th>
                 <th>Type</th>
                 <th>Spend By</th>
+                <th>Payment Mode</th>
                 <th>Month</th>
                 <th style="text-align:right">Amount</th>
               </tr>
@@ -510,11 +524,13 @@
                 return `
                   <tr>
                     <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+                    <td style="white-space:nowrap;font-size:12px;color:var(--muted)">${r.timestamp || "—"}</td>
                     <td style="white-space:nowrap">${r.date || ""}</td>
                     <td>${r.description || "<span style='color:var(--muted);font-style:italic'>—</span>"}</td>
                     <td><span class="badge ${badge}">${r.expenseCategory || ""}</span></td>
                     <td>${r.expenseType || ""}</td>
                     <td>${r.spendBy || ""}</td>
+                    <td>${r.spendVia || "—"}</td>
                     <td>${r.expenseMonth || ""}</td>
                     <td class="amount-cell">${fmt(r.amount)}</td>
                   </tr>`;
@@ -522,7 +538,7 @@
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="7" class="total-label">Total (${rows.length} entries)</td>
+                <td colspan="8" class="total-label">Total (${rows.length} entries)</td>
                 <td class="total-amount">${fmt(total)}</td>
               </tr>
             </tfoot>
@@ -538,13 +554,13 @@
   function exportCSV() {
     const rows = window._reportRows || [];
     if (!rows.length) return;
-    const headers = ["Date","Description","Expense Category","Expense Type","Amount","Spend By","Expense Month"];
+    const headers = ["Date","Description","Expense Category","Expense Type","Amount","Spend By","Payment Mode","Expense Month"];
     const lines = [headers.join(",")];
     rows.forEach(r => {
       lines.push([
         r.date, `"${(r.description||"").replace(/"/g,'""')}"`,
         r.expenseCategory, r.expenseType,
-        r.amount, r.spendBy, r.expenseMonth
+        r.amount, r.spendBy, r.spendVia || "", r.expenseMonth
       ].join(","));
     });
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });

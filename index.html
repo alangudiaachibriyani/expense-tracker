@@ -329,12 +329,6 @@
         <label for="g-spendby">Spend By *</label>
         <select id="g-spendby" required>
           <option value="">Select Person</option>
-          <option>Velu</option>
-          <option>Mani Sakthi</option>
-          <option>Shanmugam</option>
-          <option>Perumal</option>
-          <option>Yogeshwaran</option>
-          <option>Mani Selvaraj</option>
         </select>
       </div>
     </div>
@@ -433,12 +427,19 @@
             <option value="">Select Category first</option>
           </select>
         </div>
-        <div class="full">
+        <div>
           <label>Amount (₹) *</label>
           <div class="amount-wrap">
             <span>₹</span>
             <input type="number" id="amt-${id}" placeholder="0" min="0" step="1" oninput="updateTotal()" required/>
           </div>
+        </div>
+        <div>
+          <label>Payment Mode *</label>
+          <select id="via-${id}" required>
+            <option value="">Select Mode</option>
+            ${(window._spendViaOptions||[]).map(v => `<option>${v}</option>`).join("")}
+          </select>
         </div>
       </div>
     `;
@@ -503,15 +504,17 @@
 
     document.querySelectorAll(".expense-row").forEach(rowEl => {
       const id = rowEl.id.replace("row-", "");
-      const desc = document.getElementById("desc-" + id).value.trim();
-      const cat  = document.getElementById("cat-" + id).value;
-      const type = document.getElementById("type-" + id).value;
-      const amt  = document.getElementById("amt-" + id).value;
+      const desc    = document.getElementById("desc-" + id).value.trim();
+      const cat     = document.getElementById("cat-" + id).value;
+      const type    = document.getElementById("type-" + id).value;
+      const amt     = document.getElementById("amt-" + id).value;
+      const via     = document.getElementById("via-" + id).value;
 
-      if (!cat || !type || !amt) { valid = false; return; }
+      if (!cat || !type || !amt || !via) { valid = false; return; }
 
       rows.push({
         date, expenseMonth: month, spendBy,
+        spendVia: via,
         description: desc,
         expenseCategory: cat,
         expenseType: type,
@@ -520,7 +523,7 @@
     });
 
     if (!valid || rows.length === 0) {
-      showToast("Please fill all required fields in every expense row.", true);
+      showToast("Please fill all required fields including Payment Mode in every expense row.", true);
       return;
     }
 
@@ -565,6 +568,34 @@
     updateTotal();
   }
 
+  // ── Load Spend By + Spend Via from sheet ──
+  function loadSpendbyData() {
+    if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") { loadCategories(); return; }
+
+    const cbName = "spendby_cb_" + Date.now();
+    const url = APPS_SCRIPT_URL + "?action=spendby&callback=" + cbName;
+
+    window[cbName] = function(data) {
+      delete window[cbName];
+      if (data.success) {
+        const sbSel = document.getElementById("g-spendby");
+        (data.spendBy || []).forEach(p => {
+          const o = document.createElement("option");
+          o.value = o.textContent = p;
+          sbSel.appendChild(o);
+        });
+        // Store globally so each expense row can use it
+        window._spendViaOptions = data.spendVia || [];
+      }
+      loadCategories();
+    };
+
+    const script = document.createElement("script");
+    script.src = url;
+    script.onerror = function() { delete window[cbName]; loadCategories(); };
+    document.head.appendChild(script);
+  }
+
   // ── Load categories dynamically from sheet ──
   function loadCategories() {
     if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") { addRow(); return; }
@@ -577,22 +608,19 @@
       if (data.success && data.categories) {
         CATEGORY_MAP = data.categories;
       }
-      addRow(); // Add first row only after categories are loaded
+      addRow();
     };
 
     const script = document.createElement("script");
     script.src = url;
-    script.onerror = function() {
-      delete window[cbName];
-      addRow(); // Still add row even if load fails
-    };
+    script.onerror = function() { delete window[cbName]; addRow(); };
     document.head.appendChild(script);
   }
 
   // ── Init ──
   populateMonths();
   setToday();
-  loadCategories(); // loads categories then adds first row
+  loadSpendbyData(); // loads spendby → categories → then adds first row
 </script>
 </body>
 </html>
