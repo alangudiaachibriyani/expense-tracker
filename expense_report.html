@@ -92,11 +92,11 @@
     }
     .filter-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr auto;
       gap: 14px;
       align-items: end;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 560px) {
       .filter-row { grid-template-columns: 1fr 1fr; }
       .filter-row .btn-fetch { grid-column: 1 / -1; }
     }
@@ -323,17 +323,6 @@
         </select>
       </div>
       <div>
-        <label for="f-via">Payment Mode</label>
-        <select id="f-via">
-          <option value="All">All Modes</option>
-          <option>UPI</option>
-          <option>Cash</option>
-          <option>Federal Bank Transfer</option>
-          <option>HDFC Bank Transfer</option>
-          <option>Others</option>
-        </select>
-      </div>
-      <div>
         <button class="btn-fetch" id="fetch-btn" onclick="loadData()">View Report</button>
       </div>
     </div>
@@ -382,7 +371,7 @@
   async function loadData() {
     const month  = document.getElementById("f-month").value;
     const person = document.getElementById("f-person").value;
-    const via    = document.getElementById("f-via").value;
+
     const btn    = document.getElementById("fetch-btn");
     const results = document.getElementById("results");
 
@@ -400,7 +389,7 @@
       + "?action=read"
       + "&month="   + encodeURIComponent(month)
       + "&person="  + encodeURIComponent(person)
-      + "&via="     + encodeURIComponent(via)
+
       + "&callback=" + cbName;
 
     const timeout = setTimeout(() => {
@@ -418,7 +407,7 @@
         results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>${data.message}</p></div></div>`;
         return;
       }
-      renderReport(data.rows, month, person, via);
+      renderReport(data.rows, month, person);
     };
 
     const script = document.createElement("script");
@@ -435,7 +424,7 @@
     return;
   }
 
-  function renderReport(rows, month, person, via) {
+  function renderReport(rows, month, person) {
     const results = document.getElementById("results");
 
     if (!rows || rows.length === 0) {
@@ -500,7 +489,7 @@
     html += `
       <div class="table-card">
         <div class="table-header">
-          <h2>${rows.length} expense${rows.length !== 1 ? "s" : ""} — ${person === "All" ? "All Members" : person} &nbsp;|&nbsp; ${via === "All" ? "All Modes" : via} &nbsp;|&nbsp; ${month === "All" ? "All Months" : month}</h2>
+          <h2>${rows.length} expense${rows.length !== 1 ? "s" : ""} — ${person === "All" ? "All Members" : person} &nbsp;|&nbsp; ${month === "All" ? "All Months" : month}</h2>
           <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
         </div>
         <div class="table-wrap">
