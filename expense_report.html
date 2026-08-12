@@ -392,11 +392,23 @@
 
       + "&callback=" + cbName;
 
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>Request timed out. Please try again.</p></div></div>`;
-      btn.disabled = false; btn.textContent = "View Report";
-    }, 15000);
+    var retried = false;
+    function startTimeout() {
+      return setTimeout(() => {
+        delete window[cbName];
+        if (!retried) {
+          // Auto-retry once before showing error
+          retried = true;
+          results.innerHTML = `<div class="table-card"><div class="spinner-wrap"><div class="spinner"></div><p style="margin-top:12px;color:var(--muted);font-size:13px">Taking longer than usual — retrying...</p></div></div>`;
+          setTimeout(() => loadData(), 2000);
+          btn.disabled = false; btn.textContent = "View Report";
+        } else {
+          results.innerHTML = `<div class="table-card"><div class="state-box"><div class="state-icon">❌</div><p>Request timed out. Please try again.</p><small>If this keeps happening, the sheet may have too many rows loading at once.</small></div></div>`;
+          btn.disabled = false; btn.textContent = "View Report";
+        }
+      }, 30000);
+    }
+    const timeout = startTimeout();
 
     window[cbName] = function(data) {
       clearTimeout(timeout);
